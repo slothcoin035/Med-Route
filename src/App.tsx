@@ -42,6 +42,7 @@ import { RateEditorModal } from './components/RateEditorModal';
 import { NavigationAppModal } from './components/NavigationAppModal';
 import { ContactPatientModal } from './components/ContactPatientModal';
 import { DriveModeModal } from './components/DriveModeModal';
+import { EditDeliveryModal } from './components/EditDeliveryModal';
 import {
   getSavedRoundTripPreference,
   saveRoundTripPreference,
@@ -83,6 +84,7 @@ import {
   MessageSquare,
   Car,
   Home,
+  Edit2,
 } from 'lucide-react';
 
 const HUB_STORAGE_KEY = 'medroute_saved_hub';
@@ -187,6 +189,13 @@ export default function App() {
     isOpen: false,
     delivery: null,
   });
+  const [editDeliveryModalState, setEditDeliveryModalState] = useState<{
+    isOpen: boolean;
+    delivery: Delivery | null;
+  }>({
+    isOpen: false,
+    delivery: null,
+  });
   const [isDriveModeOpen, setIsDriveModeOpen] = useState<boolean>(false);
 
   const handleOpenNavigationApp = (
@@ -214,6 +223,24 @@ export default function App() {
       isOpen: true,
       delivery: deliv,
     });
+  };
+
+  const handleOpenEditDelivery = (deliv: Delivery) => {
+    setEditDeliveryModalState({
+      isOpen: true,
+      delivery: deliv,
+    });
+  };
+
+  const handleUpdateDelivery = (updated: Delivery) => {
+    setDeliveries((prev) =>
+      prev.map((d) => (d.id === updated.id ? updated : d))
+    );
+    setContactModalState((prev) =>
+      prev.isOpen && prev.delivery?.id === updated.id
+        ? { ...prev, delivery: updated }
+        : prev
+    );
   };
 
   // Persist deliveries state persistently to IndexedDB and localStorage whenever modified
@@ -1311,7 +1338,18 @@ export default function App() {
                   </div>
 
                   <div className="mb-2.5">
-                    <h4 className="font-bold text-white text-sm truncate">{nextPendingDelivery.patientName}</h4>
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-bold text-white text-sm truncate">{nextPendingDelivery.patientName}</h4>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditDelivery(nextPendingDelivery)}
+                        className="text-[11px] text-teal-400 hover:text-teal-300 font-semibold flex items-center gap-1 hover:underline cursor-pointer shrink-0 ml-2"
+                        title="Edit stop details, patient phone, or address"
+                      >
+                        <Edit2 className="w-3 h-3" />
+                        <span>Edit Stop</span>
+                      </button>
+                    </div>
                     <p className="text-xs text-slate-300 truncate flex items-center gap-1 mt-0.5">
                       <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
                       <span>{nextPendingDelivery.address}, {nextPendingDelivery.city}</span>
@@ -1426,6 +1464,7 @@ export default function App() {
                 }}
                 onOpenNavigationApp={handleOpenNavigationApp}
                 onOpenContactPatient={handleOpenContactPatient}
+                onOpenEditDelivery={handleOpenEditDelivery}
                 zoneFilter={zoneFilter}
                 ratesConfig={ratesConfig}
                 returnLeg={returnLeg}
@@ -1510,6 +1549,7 @@ export default function App() {
               }}
               onOpenNavigationApp={handleOpenNavigationApp}
               onOpenContactPatient={handleOpenContactPatient}
+              onOpenEditDelivery={handleOpenEditDelivery}
               zoneFilter={zoneFilter}
               ratesConfig={ratesConfig}
               returnLeg={returnLeg}
@@ -1763,6 +1803,8 @@ export default function App() {
         onClose={() => setContactModalState((prev) => ({ ...prev, isOpen: false }))}
         delivery={contactModalState.delivery}
         driverName={driver.name}
+        onUpdateDelivery={handleUpdateDelivery}
+        onOpenEditStop={handleOpenEditDelivery}
       />
 
       <DriveModeModal
@@ -1787,6 +1829,16 @@ export default function App() {
         onToggleDeviceGps={() =>
           setDriver((d) => ({ ...d, useDeviceGps: !d.useDeviceGps }))
         }
+        onUpdateDelivery={handleUpdateDelivery}
+      />
+
+      <EditDeliveryModal
+        isOpen={editDeliveryModalState.isOpen}
+        onClose={() => setEditDeliveryModalState((prev) => ({ ...prev, isOpen: false }))}
+        delivery={editDeliveryModalState.delivery}
+        hub={hub}
+        ratesConfig={ratesConfig}
+        onSaveDelivery={handleUpdateDelivery}
       />
     </div>
   );

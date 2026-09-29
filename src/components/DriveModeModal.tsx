@@ -63,6 +63,7 @@ interface DriveModeModalProps {
   onToggleSimulation: () => void;
   onSetSimSpeed: (speed: number) => void;
   onToggleDeviceGps: () => void;
+  onUpdateDelivery?: (updated: Delivery) => void;
 }
 
 export const DriveModeModal: React.FC<DriveModeModalProps> = ({
@@ -79,12 +80,15 @@ export const DriveModeModal: React.FC<DriveModeModalProps> = ({
   onToggleSimulation,
   onSetSimSpeed,
   onToggleDeviceGps,
+  onUpdateDelivery,
 }) => {
   const [preferredApp, setPreferredApp] = useState<NavAppChoice>(() => getPreferredNavApp());
   const [isVoiceEnabled, setIsVoiceEnabled] = useState<boolean>(() => getVoiceGuidancePref());
   const [showShortcutsHelp, setShowShortcutsHelp] = useState<boolean>(false);
   const [isHighContrastNight, setIsHighContrastNight] = useState<boolean>(true);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
+  const [isEditingPhone, setIsEditingPhone] = useState<boolean>(false);
+  const [phoneInput, setPhoneInput] = useState<string>('');
 
   // Sync preferences on open
   useEffect(() => {
@@ -152,7 +156,9 @@ export const DriveModeModal: React.FC<DriveModeModalProps> = ({
     triggerHapticFeedback('tap');
     if (!nextDelivery || !nextDelivery.phone) {
       if (e) e.preventDefault();
-      flashNotice('No phone number on record for this stop');
+      setPhoneInput('');
+      setIsEditingPhone(true);
+      flashNotice('Enter patient phone number');
       return;
     }
     openPhoneDialer(nextDelivery.phone);
@@ -164,7 +170,9 @@ export const DriveModeModal: React.FC<DriveModeModalProps> = ({
     triggerHapticFeedback('tap');
     if (!nextDelivery || !nextDelivery.phone) {
       if (e) e.preventDefault();
-      flashNotice('No phone number on record for this stop');
+      setPhoneInput('');
+      setIsEditingPhone(true);
+      flashNotice('Enter patient phone number');
       return;
     }
     openSmsApp(nextDelivery.phone, smsBodyText);
@@ -535,9 +543,25 @@ export const DriveModeModal: React.FC<DriveModeModalProps> = ({
                   {nextDelivery.patientName}
                 </h1>
 
-                <div className="flex items-center gap-1.5 text-slate-300 text-xs sm:text-sm mt-0.5 font-medium">
-                  <MapPin className="w-3.5 h-3.5 text-teal-400 shrink-0" />
-                  <span className="truncate">{nextDelivery.address}, {nextDelivery.city}</span>
+                <div className="flex items-center gap-3 text-slate-300 text-xs sm:text-sm mt-0.5 font-medium flex-wrap">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <MapPin className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+                    <span className="truncate">{nextDelivery.address}, {nextDelivery.city}</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-slate-400 border-l border-slate-700 pl-2">
+                    <Phone className="w-3 h-3 text-sky-400 shrink-0" />
+                    <span className="font-mono text-xs">{nextDelivery.phone || 'No Phone'}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPhoneInput(nextDelivery.phone || '');
+                        setIsEditingPhone(true);
+                      }}
+                      className="text-teal-400 hover:text-teal-300 text-[11px] font-bold ml-1 hover:underline cursor-pointer"
+                    >
+                      {nextDelivery.phone ? 'Edit' : '+ Add'}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -759,6 +783,68 @@ export const DriveModeModal: React.FC<DriveModeModalProps> = ({
                   {spd}x
                 </button>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Phone Config Dialog in Drive Mode */}
+      {isEditingPhone && nextDelivery && (
+        <div className="fixed inset-0 z-[2400] bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-5 max-w-sm w-full shadow-2xl space-y-3 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-white text-sm flex items-center gap-2">
+                <Phone className="w-4 h-4 text-teal-400" />
+                <span>Configure Patient Phone</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsEditingPhone(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-xs text-slate-400">
+              For Stop #{nextDelivery.sequence}: <strong className="text-white">{nextDelivery.patientName}</strong>
+            </p>
+            <div className="relative">
+              <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+              <input
+                type="tel"
+                value={phoneInput}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  if (digits.length <= 3) setPhoneInput(digits ? `(${digits}` : '');
+                  else if (digits.length <= 6) setPhoneInput(`(${digits.slice(0, 3)}) ${digits.slice(3)}`);
+                  else setPhoneInput(`(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`);
+                }}
+                placeholder="(713) 555-0100"
+                autoFocus
+                className="w-full pl-9 pr-3 py-2 text-sm font-mono bg-slate-950 border border-slate-700 rounded-xl text-white focus:ring-2 focus:ring-teal-500 outline-hidden"
+              />
+            </div>
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setIsEditingPhone(false)}
+                className="px-3 py-1.5 text-xs text-slate-400 hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onUpdateDelivery) {
+                    onUpdateDelivery({ ...nextDelivery, phone: phoneInput.trim() });
+                  }
+                  flashNotice(`Saved phone for ${nextDelivery.patientName}`);
+                  setIsEditingPhone(false);
+                }}
+                className="px-4 py-2 bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs rounded-xl shadow cursor-pointer active:scale-95"
+              >
+                Save Phone
+              </button>
             </div>
           </div>
         </div>

@@ -31,6 +31,7 @@ export interface StagedDestination {
   city?: string;
   zip?: string;
   patientName?: string;
+  phone?: string;
   notes?: string;
   medicationName?: string;
   rxNumber?: string;
@@ -62,6 +63,8 @@ export const AddDeliveryModal: React.FC<AddDeliveryModalProps> = ({
 
   // Current single input fields
   const [currentAddress, setCurrentAddress] = useState('');
+  const [currentPatientName, setCurrentPatientName] = useState('');
+  const [currentPhone, setCurrentPhone] = useState('');
   const [currentMiles, setCurrentMiles] = useState('8.5');
   const [currentIsStat, setCurrentIsStat] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
@@ -188,10 +191,14 @@ export const AddDeliveryModal: React.FC<AddDeliveryModalProps> = ({
       coordinates: coords,
       city: currentCity || parsed.city || undefined,
       zip: currentZip || parsed.zip || undefined,
+      patientName: currentPatientName.trim() || undefined,
+      phone: currentPhone.trim() || undefined,
     };
 
     setStagedList((prev) => [...prev, newDest]);
     setCurrentAddress('');
+    setCurrentPatientName('');
+    setCurrentPhone('');
     setCurrentCoords(null);
     setCurrentCity('');
     setCurrentZip('');
@@ -305,7 +312,7 @@ export const AddDeliveryModal: React.FC<AddDeliveryModalProps> = ({
         id: `del-${Date.now()}-${idx}`,
         rxNumber: item.rxNumber || `RX-${Math.floor(10000 + Math.random() * 90000)}`,
         patientName: item.patientName || `Stop #${stopNumber} (${item.address.split(',')[0].trim()})`,
-        phone: '(713) 555-0100',
+        phone: item.phone || '(713) 555-0100',
         address: item.address,
         city: finalCity,
         zip: finalZip,
@@ -476,6 +483,40 @@ export const AddDeliveryModal: React.FC<AddDeliveryModalProps> = ({
                     <Camera className="w-3.5 h-3.5 text-teal-600" />
                     <span className="hidden sm:inline">Scan Camera</span>
                   </button>
+                </div>
+              </div>
+
+              {/* Patient Name & Phone Inputs */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
+                <div>
+                  <label className="block font-semibold text-slate-700 text-[11px] mb-0.5">
+                    Patient Name (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={currentPatientName}
+                    onChange={(e) => setCurrentPatientName(e.target.value)}
+                    placeholder="e.g. John Doe"
+                    className="w-full px-2.5 py-1.5 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-teal-600 bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 text-[11px] mb-0.5 flex items-center justify-between">
+                    <span>Patient Phone</span>
+                    <span className="text-[10px] text-teal-700 font-medium">for Calls & SMS</span>
+                  </label>
+                  <input
+                    type="tel"
+                    value={currentPhone}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      if (digits.length <= 3) setCurrentPhone(digits ? `(${digits}` : '');
+                      else if (digits.length <= 6) setCurrentPhone(`(${digits.slice(0, 3)}) ${digits.slice(3)}`);
+                      else setCurrentPhone(`(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`);
+                    }}
+                    placeholder="(713) 555-0100"
+                    className="w-full px-2.5 py-1.5 border border-slate-300 rounded-xl text-xs font-mono text-slate-900 focus:outline-teal-600 bg-white"
+                  />
                 </div>
               </div>
 

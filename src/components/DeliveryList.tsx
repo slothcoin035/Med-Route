@@ -14,6 +14,7 @@ import {
   MessageSquare,
   RotateCcw,
   Flag,
+  Edit2,
 } from 'lucide-react';
 
 interface DeliveryListProps {
@@ -27,6 +28,7 @@ interface DeliveryListProps {
   onOpenDirections?: (deliveryId?: string) => void;
   onOpenNavigationApp?: (destination: LocationPoint, name?: string, address?: string) => void;
   onOpenContactPatient?: (delivery: Delivery) => void;
+  onOpenEditDelivery?: (delivery: Delivery) => void;
   zoneFilter: ZoneId | 'ALL';
   ratesConfig?: RatesConfig;
   returnLeg?: RouteLeg;
@@ -44,6 +46,7 @@ export const DeliveryList: React.FC<DeliveryListProps> = ({
   onOpenDirections,
   onOpenNavigationApp,
   onOpenContactPatient,
+  onOpenEditDelivery,
   zoneFilter,
   ratesConfig,
   returnLeg,
@@ -409,6 +412,21 @@ export const DeliveryList: React.FC<DeliveryListProps> = ({
                       >
                         <Navigation className="w-3 h-3 text-teal-600 dark:text-teal-400" />
                         <span>Directions</span>
+                      </button>
+                    )}
+
+                    {onOpenEditDelivery && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onOpenEditDelivery(delivery);
+                        }}
+                        className="p-1.5 sm:px-2 sm:py-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/60 rounded-lg transition-colors flex items-center gap-1 min-h-[32px] cursor-pointer"
+                        title="Edit stop details, patient phone, or notes"
+                      >
+                        <Edit2 className="w-3 h-3" />
+                        <span className="hidden sm:inline">Edit</span>
                       </button>
                     )}
 
