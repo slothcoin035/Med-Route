@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="format-detection" content="telephone=no" />
+    <title>MedRoute Delivery & Zone Pay Tracker</title>
+    <link rel="icon" type="image/png" href="/app-icon.png" />
+    <link rel="apple-touch-icon" href="/app-icon.png" />
+    <meta name="description" content="Real-time medication delivery management, route optimization, live driver ETA tracking, and zone pay calculations." />
+    <meta property="og:title" content="MedRoute Delivery & Zone Pay Tracker" />
+    <meta property="og:description" content="Real-time medication delivery management, route optimization, live driver ETA tracking, and zone pay calculations." />
+    <meta property="og:image" content="/app-icon.png" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script>
+      // Global error interceptor to catch and suppress benign browser extension / iframe port disconnect errors
+      (function() {
+        function isIgnorable(err) {
+          if (!err) return false;
+          var msg = typeof err === 'string' ? err : (err.message || String(err));
+          return (
+            msg.indexOf('disconnected port object') !== -1 ||
+            msg.indexOf('message channel closed') !== -1 ||
+            msg.indexOf('Extension context invalidated') !== -1 ||
+            msg.indexOf('ResizeObserver loop completed') !== -1 ||
+            msg.indexOf('ResizeObserver loop limit exceeded') !== -1
+          );
+        }
+
+        window.addEventListener('error', function(event) {
+          if (isIgnorable(event.message) || isIgnorable(event.error)) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            return true;
+          }
+        }, true);
+
+        window.addEventListener('unhandledrejection', function(event) {
+          if (isIgnorable(event.reason)) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            return true;
+          }
+        }, true);
+      })();
+    </script>
+  </head>
+  <body class="bg-slate-50 text-slate-900 antialiased selection:bg-teal-500 selection:text-white">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

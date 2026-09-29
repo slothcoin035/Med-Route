@@ -1,0 +1,11 @@
+{
+  "name": "MedRoute Delivery & Zone Pay Tracker",
+  "description": "Real-time medication delivery management, route optimization, live driver ETA tracking, and zone pay calculations.",
+  "requestFramePermissions": [
+    "geolocation",
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
